@@ -104,6 +104,30 @@ import java.util.function.Consumer;
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
+ *
+ *           无界阻塞队列
+ *           要么提供比较器，要么元素必须实现比较接口
+ *           迭代器不保证顺序
+ *           优先级一样的元素，不保证顺序
+ *           如果想要保证顺序，用一个类去封装这个元素，这个类还包含插入元素的顺序
+ *           class FIFOEntry<E extends Comparable<? super E>>
+ *             implements Comparable<FIFOEntry<E>> {
+ *           static final AtomicLong seq = new AtomicLong(0);
+ *           final long seqNum;
+ *           final E entry;
+ *           public FIFOEntry(E entry) {
+ *             seqNum = seq.getAndIncrement();
+ *             this.entry = entry;
+ *           }
+ *           public E getEntry() { return entry; }
+ *           public int compareTo(FIFOEntry<E> other) {
+ *             int res = entry.compareTo(other.entry);
+ *             if (res == 0 && other.entry != this.entry)
+ *               res = (seqNum < other.seqNum ? -1 : 1);
+ *             return res;
+ *           }
+}
+}
  */
 @SuppressWarnings("unchecked")
 public class PriorityBlockingQueue<E> extends AbstractQueue<E>
@@ -124,6 +148,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      * interoperability, a plain PriorityQueue is still used during
      * serialization, which maintains compatibility at the expense of
      * transiently doubling overhead.
+     *
+     *
      */
 
     /**
@@ -284,6 +310,8 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
      *
      * @param array the heap array
      * @param oldCap the length of the array
+     *
+     *               增长队列长度
      */
     private void tryGrow(Object[] array, int oldCap) {
         lock.unlock(); // must release and then re-acquire main lock
@@ -295,13 +323,13 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
                 int newCap = oldCap + ((oldCap < 64) ?
                                        (oldCap + 2) : // grow faster if small
                                        (oldCap >> 1));
-                if (newCap - MAX_ARRAY_SIZE > 0) {    // possible overflow
+                if (newCap - MAX_ARRAY_SIZE > 0) { /**如果新长度大于最大长度，则用最大长度*/   // possible overflow
                     int minCap = oldCap + 1;
                     if (minCap < 0 || minCap > MAX_ARRAY_SIZE)
                         throw new OutOfMemoryError();
                     newCap = MAX_ARRAY_SIZE;
                 }
-                if (newCap > oldCap && queue == array)
+                if (newCap > oldCap && queue == array)/**如果queue ！= array那说明其他线程已经调用过了，就不用在调用*/
                     newArray = new Object[newCap];
             } finally {
                 allocationSpinLock = 0;

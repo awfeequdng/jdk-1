@@ -180,7 +180,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         if (++putIndex == items.length)/**如果缓冲区满了之后，设置插入index为0*/
             putIndex = 0;
         count++;
-        notEmpty.signal();
+        notEmpty.signal();/**唤醒取线程*/
     }
 
     /**
@@ -841,6 +841,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Care must be taken to keep list sweeping methods from
      * reentrantly invoking another such method, causing subtle
      * corruption bugs.
+     *
+     *   迭代器之间可以共享数据，当有元素被删除时，允许更新迭代器
      */
     class Itrs {
 
@@ -862,7 +864,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /** Linked list of weak iterator references */
         private Node head;
 
-        /** Used to expunge stale iterators */
+        /** Used to expunge stale iterators
+         *
+         *   用于清除旧的迭代器
+         * */
         private Node sweeper = null;
 
         private static final int SHORT_SWEEP_PROBES = 4;
@@ -879,6 +884,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          *
          * @param tryHarder whether to start in try-harder mode, because
          * there is known to be at least one iterator to collect
+         *
+         *                  清除旧的迭代器
          */
         void doSomeSweeping(boolean tryHarder) {
             // assert lock.getHoldCount() == 1;
@@ -888,7 +895,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             final Node sweeper = this.sweeper;
             boolean passedGo;   // to limit search to one full sweep
 
-            if (sweeper == null) {
+            if (sweeper == null) {/**第一次加入迭代器*/
                 o = null;
                 p = head;
                 passedGo = true;
@@ -900,7 +907,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
             for (; probes > 0; probes--) {
                 if (p == null) {
-                    if (passedGo)
+                    if (passedGo)/**没有迭代器*/
                         break;
                     o = null;
                     p = head;
@@ -936,7 +943,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /**
          * Adds a new iterator to the linked list of tracked iterators.
          */
-        void register(Itr itr) {
+        void register(Itr itr) {/**注册一个迭代器，相当于新建一个node，插入头*/
             // assert lock.getHoldCount() == 1;
             head = new Node(itr, head);
         }
@@ -1045,6 +1052,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * expected element to remove, in lastItem.  Yes, we may fail to
      * remove lastItem from the queue if it moved due to an interleaved
      * interior remove while in detached mode.
+     *
+     *   迭代器弱一致性
      */
     private class Itr implements Iterator<E> {
         /** Index to look for new nextItem; NONE at end */
@@ -1068,7 +1077,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /** Previous value of iters.cycles */
         private int prevCycles;
 
-        /** Special index value indicating "not available" or "undefined" */
+        /** Special index value indicating "not available" or "undefined"
+         *
+         *   标记位空
+         * */
         private static final int NONE = -1;
 
         /**
