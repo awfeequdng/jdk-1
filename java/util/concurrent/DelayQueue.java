@@ -34,10 +34,11 @@
  */
 
 package java.util.concurrent;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.*;
+
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * An unbounded {@linkplain BlockingQueue blocking queue} of
@@ -138,7 +139,7 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             q.offer(e);
-            if (q.peek() == e) {
+            if (q.peek() == e) {/**新插入的对象拥有最高的优先级*/
                 leader = null;
                 available.signal();
             }
@@ -179,6 +180,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      *
      * @return the head of this queue, or {@code null} if this
      *         queue has no elements with an expired delay
+     *
+     *         直接返回
      */
     public E poll() {
         final ReentrantLock lock = this.lock;
@@ -200,6 +203,8 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
      *
      * @return the head of this queue
      * @throws InterruptedException {@inheritDoc}
+     *
+     *   要等待delaytime走完
      */
     public E take() throws InterruptedException {
         final ReentrantLock lock = this.lock;
@@ -207,22 +212,22 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         try {
             for (;;) {
                 E first = q.peek();
-                if (first == null)
+                if (first == null)/**没有元素则等待*/
                     available.await();
                 else {
                     long delay = first.getDelay(NANOSECONDS);
-                    if (delay <= 0)
+                    if (delay <= 0)/**等待时间到了取出*/
                         return q.poll();
                     first = null; // don't retain ref while waiting
-                    if (leader != null)
+                    if (leader != null)/**有leader则等待 ，说明另一个线程在执行available.awaitNanos(delay)时，发生了调度*/
                         available.await();
-                    else {
+                    else {/**没leader 则设置此线程为leader，并等待相应时间*/
                         Thread thisThread = Thread.currentThread();
                         leader = thisThread;
                         try {
                             available.awaitNanos(delay);
                         } finally {
-                            if (leader == thisThread)
+                            if (leader == thisThread)/**防止因为没有等待够相应的时间，继续等待*/
                                 leader = null;
                         }
                     }

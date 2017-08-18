@@ -182,7 +182,10 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         abstract E transfer(E e, boolean timed, long nanos);
     }
 
-    /** The number of CPUs, for spin control */
+    /** The number of CPUs, for spin control
+     *
+     *    cpu的核心数
+     * */
     static final int NCPUS = Runtime.getRuntime().availableProcessors();
 
     /**
@@ -191,6 +194,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * variety of processors and OSes. Empirically, the best value
      * seems not to vary with number of CPUs (beyond 2) so is just
      * a constant.
+     *
+     *    等待时最大旋转次数
      */
     static final int maxTimedSpins = (NCPUS < 2) ? 0 : 32;
 
@@ -198,6 +203,8 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * The number of times to spin before blocking in untimed waits.
      * This is greater than timed value because untimed waits spin
      * faster since they don't need to check times on each spin.
+     *
+     *   无时间限制的等待旋转次数
      */
     static final int maxUntimedSpins = maxTimedSpins * 16;
 
