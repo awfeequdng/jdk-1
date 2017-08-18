@@ -329,13 +329,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
         for (Node<E> t = tail, p = t;;) {
             Node<E> q = p.next;
-            if (q == null) {
+            if (q == null) {/**尾部没有元素*/
                 // p is last node
                 if (p.casNext(null, newNode)) {
                     // Successful CAS is the linearization point
                     // for e to become an element of this queue,
                     // and for newNode to become "live".
-                    if (p != t) // hop two nodes at a time
+                    if (p != t) /**中间有其他线程插入*/// hop two nodes at a time
                         casTail(t, newNode);  // Failure is OK.
                     return true;
                 }
