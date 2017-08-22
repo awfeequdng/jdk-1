@@ -146,6 +146,8 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         and this map does not permit null keys or values
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
+     *
+     *         如果存在key则返回对应的value，否则put  key和value,返回
      */
      V putIfAbsent(K key, V value);
 
@@ -176,6 +178,8 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      * @throws NullPointerException if the specified key or value is null,
      *         and this map does not permit null keys or values
      *         (<a href="../Collection.html#optional-restrictions">optional</a>)
+     *
+     *         如果key和value都相同则删除并返回true
      */
     boolean remove(Object key, Object value);
 
@@ -207,6 +211,8 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         and this map does not permit null keys or values
      * @throws IllegalArgumentException if some property of a specified key
      *         or value prevents it from being stored in this map
+     *
+     *         如果存在key，且对应的value是old value则换成newValue
      */
     boolean replace(K key, V oldValue, V newValue);
 
@@ -240,6 +246,8 @@ public interface ConcurrentMap<K, V> extends Map<K, V> {
      *         and this map does not permit null keys or values
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
+     *
+     *         如果key存在则换成value
      */
     V replace(K key, V value);
 

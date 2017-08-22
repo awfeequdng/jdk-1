@@ -360,8 +360,8 @@ public class ConcurrentLinkedDeque<E>
                     (q = (p = q).prev) != null)
                     // Check for head updates every other hop.
                     // If p == q, we are sure to follow head instead.
-                    p = (h != (h = head)) ? h : q;
-                else if (p.next == p) // PREV_TERMINATOR
+                    p = (h != (h = head)) ? h : q;/**h！=head说明head变了，可能又插入了，也可能出队列了，所以用新的head*/
+                else if (p.next == p) /**p被删除*/// PREV_TERMINATOR
                     continue restartFromHead;
                 else {
                     // p is first node
@@ -550,9 +550,9 @@ public class ConcurrentLinkedDeque<E>
                 }
                 return;
             }
-            else if (p == q)
+            else if (p == q)/**first被删除或者first.item=null，即队列为空*/
                 return;
-            else {
+            else {/**q。next不等于null*/
                 o = p;
                 p = q;
             }

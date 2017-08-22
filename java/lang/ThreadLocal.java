@@ -122,6 +122,8 @@ public class ThreadLocal<T> {
      * anonymous inner class will be used.
      *
      * @return the initial value for this thread-local
+     *
+     *  为空时调用get方法时调用
      */
     protected T initialValue() {
         return null;

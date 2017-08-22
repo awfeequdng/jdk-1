@@ -150,6 +150,8 @@ public interface SortedMap<K,V> extends Map<K,V> {
      *         {@code toKey}; or if this map itself has a restricted
      *         range, and {@code fromKey} or {@code toKey} lies
      *         outside the bounds of the range
+     *
+     *         获取从fromKey到toKey的视图
      */
     SortedMap<K,V> subMap(K fromKey, K toKey);
 
@@ -177,6 +179,9 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * @throws IllegalArgumentException if this map itself has a
      *         restricted range, and {@code toKey} lies outside the
      *         bounds of the range
+     *
+     *         返回比toKey小的视图，对该map或者原map的修改会相互影响，
+     *         在返回的map插入一个大于toKey的键，会抛出IllegalArgumentException
      */
     SortedMap<K,V> headMap(K toKey);
 
@@ -204,6 +209,8 @@ public interface SortedMap<K,V> extends Map<K,V> {
      * @throws IllegalArgumentException if this map itself has a
      *         restricted range, and {@code fromKey} lies outside the
      *         bounds of the range
+     *
+     *         基本同上，不过返回的是大于fromKey
      */
     SortedMap<K,V> tailMap(K fromKey);
 

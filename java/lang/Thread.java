@@ -1225,7 +1225,7 @@ class Thread implements Runnable {
      *          if {@link java.lang.ThreadGroup#checkAccess} determines that
      *          the current thread cannot access its thread group
      *
-     *          返回数组的长度可能和activeCount方法返回的不一致
+     *          返回该线程所在的线程组和子组中存活的线程，数组的长度可能和activeCount方法返回的不一致
      */
     public static int enumerate(Thread tarray[]) {
         return currentThread().getThreadGroup().enumerate(tarray);
@@ -1822,7 +1822,7 @@ class Thread implements Runnable {
          * that object. A thread that has called <tt>Thread.join()</tt>
          * is waiting for a specified thread to terminate.
          *
-         *   等待状态，释放锁
+         *   等待状态
          *   当调用wait和join和LockSupport.park()，会使当前线程进入等待状态，等待其他线程主动去唤醒
          */
         WAITING,
