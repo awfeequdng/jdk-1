@@ -92,6 +92,8 @@ import java.util.function.UnaryOperator;
  *           迭代器只支持查找
  *           数组或集合进行初始化，全部都copy一下
  *           返回子集时也是copy后返回
+ *           修改全都copy
+ *           因为它是用一个数组来存储的，并且保证数组是满的，不像其他例如vector是使用用一个数组和size来确定访问
  */
 public class CopyOnWriteArrayList<E>
     implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
@@ -525,6 +527,8 @@ public class CopyOnWriteArrayList<E>
      *
      * @param o element to be removed from this list, if present
      * @return {@code true} if this list contained the specified element
+     *
+     *   如果存在则删除第一个，否则返回false
      */
     public boolean remove(Object o) {
         Object[] snapshot = getArray();
@@ -612,6 +616,8 @@ public class CopyOnWriteArrayList<E>
      *
      * @param e element to be added to this list, if absent
      * @return {@code true} if the element was added
+     *
+     *   如果不存在则添加
      */
     public boolean addIfAbsent(E e) {
         Object[] snapshot = getArray();

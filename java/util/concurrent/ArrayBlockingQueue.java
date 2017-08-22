@@ -78,6 +78,10 @@ import java.util.Spliterator;
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
+ *
+ *           数组一旦被创建则不能被修改
+ *           缓冲区为空时取出操作将阻塞，同理，缓冲区满时，插入操作将被阻塞
+ *
  */
 public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
@@ -93,13 +97,25 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     /** The queued items */
     final Object[] items;
 
-    /** items index for next take, poll, peek or remove */
+    /** items index for next take, poll, peek or remove
+     *
+     * 取出的index
+     *
+     * */
     int takeIndex;
 
-    /** items index for next put, offer, or add */
+
+    /** items index for next put, offer, or add
+     *
+     *  插入的index
+     *
+     * */
     int putIndex;
 
-    /** Number of elements in the queue */
+    /** Number of elements in the queue
+     *
+     *   实际数量
+     * */
     int count;
 
     /*
@@ -144,6 +160,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Throws NullPointerException if argument is null.
      *
      * @param v the element
+     *
+     *
      */
     private static void checkNotNull(Object v) {
         if (v == null)
@@ -159,10 +177,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // assert items[putIndex] == null;
         final Object[] items = this.items;
         items[putIndex] = x;
-        if (++putIndex == items.length)
+        if (++putIndex == items.length)/**如果缓冲区满了之后，设置插入index为0*/
             putIndex = 0;
         count++;
-        notEmpty.signal();
+        notEmpty.signal();/**唤醒取线程*/
     }
 
     /**
@@ -248,6 +266,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      *        on insertion or removal, are processed in FIFO order;
      *        if {@code false} the access order is unspecified.
      * @throws IllegalArgumentException if {@code capacity < 1}
+     *
+     *    fail，公平锁(true)
      */
     public ArrayBlockingQueue(int capacity, boolean fair) {
         if (capacity <= 0)
@@ -307,6 +327,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * @return {@code true} (as specified by {@link Collection#add})
      * @throws IllegalStateException if this queue is full
      * @throws NullPointerException if the specified element is null
+     *
+     *    如果满了则抛出IllegalStateException
+     *
      */
     public boolean add(E e) {
         return super.add(e);
@@ -320,6 +343,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * which can fail to insert an element only by throwing an exception.
      *
      * @throws NullPointerException if the specified element is null
+     *
+     *   同上只不过当队列已满时没有抛出异常
      */
     public boolean offer(E e) {
         checkNotNull(e);
@@ -816,6 +841,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * Care must be taken to keep list sweeping methods from
      * reentrantly invoking another such method, causing subtle
      * corruption bugs.
+     *
+     *   迭代器之间可以共享数据，当有元素被删除时，允许更新迭代器
      */
     class Itrs {
 
@@ -837,7 +864,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /** Linked list of weak iterator references */
         private Node head;
 
-        /** Used to expunge stale iterators */
+        /** Used to expunge stale iterators
+         *
+         *   用于清除旧的迭代器
+         * */
         private Node sweeper = null;
 
         private static final int SHORT_SWEEP_PROBES = 4;
@@ -854,6 +884,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
          *
          * @param tryHarder whether to start in try-harder mode, because
          * there is known to be at least one iterator to collect
+         *
+         *                  清除旧的迭代器
          */
         void doSomeSweeping(boolean tryHarder) {
             // assert lock.getHoldCount() == 1;
@@ -863,7 +895,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             final Node sweeper = this.sweeper;
             boolean passedGo;   // to limit search to one full sweep
 
-            if (sweeper == null) {
+            if (sweeper == null) {/**第一次加入迭代器*/
                 o = null;
                 p = head;
                 passedGo = true;
@@ -875,7 +907,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
 
             for (; probes > 0; probes--) {
                 if (p == null) {
-                    if (passedGo)
+                    if (passedGo)/**没有迭代器*/
                         break;
                     o = null;
                     p = head;
@@ -911,7 +943,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /**
          * Adds a new iterator to the linked list of tracked iterators.
          */
-        void register(Itr itr) {
+        void register(Itr itr) {/**注册一个迭代器，相当于新建一个node，插入头*/
             // assert lock.getHoldCount() == 1;
             head = new Node(itr, head);
         }
@@ -1020,6 +1052,8 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * expected element to remove, in lastItem.  Yes, we may fail to
      * remove lastItem from the queue if it moved due to an interleaved
      * interior remove while in detached mode.
+     *
+     *   迭代器弱一致性
      */
     private class Itr implements Iterator<E> {
         /** Index to look for new nextItem; NONE at end */
@@ -1043,7 +1077,10 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         /** Previous value of iters.cycles */
         private int prevCycles;
 
-        /** Special index value indicating "not available" or "undefined" */
+        /** Special index value indicating "not available" or "undefined"
+         *
+         *   标记位空
+         * */
         private static final int NONE = -1;
 
         /**

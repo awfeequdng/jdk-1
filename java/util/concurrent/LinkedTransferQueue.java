@@ -35,15 +35,8 @@
 
 package java.util.concurrent;
 
-import java.util.AbstractQueue;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Queue;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 import java.util.concurrent.locks.LockSupport;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.function.Consumer;
 
 /**
@@ -84,6 +77,8 @@ import java.util.function.Consumer;
  * @since 1.7
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
+ *            先进先出队列
+ *           头结点是时间最长的
  */
 public class LinkedTransferQueue<E> extends AbstractQueue<E>
     implements TransferQueue<E>, java.io.Serializable {
@@ -408,6 +403,9 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
      * sweeps. However, the associated garbage chains terminate when
      * some successor ultimately falls off the head of the list and is
      * self-linked.
+     *
+     *    双向链表 节点表示数据或请求
+     *    必须找到相匹配的，否则一直阻塞
      */
 
     /** True if on multiprocessor */
@@ -476,6 +474,8 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
         /**
          * Links node to itself to avoid garbage retention.  Called
          * only after CASing head field, so uses relaxed write.
+         *
+         *
          */
         final void forgetNext() {
             UNSAFE.putObject(this, nextOffset, this);
@@ -615,18 +615,18 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             for (Node h = head, p = h; p != null;) { // find & match first node
                 boolean isData = p.isData;
                 Object item = p.item;
-                if (item != p && (item != null) == isData) { // unmatched
+                if (item != p && (item != null) == isData) {/**未匹配*/ // unmatched
                     if (isData == haveData)   // can't match
                         break;
                     if (p.casItem(item, e)) { // match
                         for (Node q = p; q != h;) {
                             Node n = q.next;  // update by 2 unless singleton
-                            if (head == h && casHead(h, n == null ? q : n)) {
-                                h.forgetNext();
+                            if (head == h && casHead(h, n == null ? q : n)) {/**为什么越过q，而取q.next*/
+                                h.forgetNext();/**自连接*/
                                 break;
                             }                 // advance and retry
                             if ((h = head)   == null ||
-                                (q = h.next) == null || !q.isMatched())
+                                (q = h.next) == null || !q.isMatched())/**h不是头结点*/
                                 break;        // unless slack < 2
                         }
                         LockSupport.unpark(p.waiter);
@@ -662,7 +662,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
     private Node tryAppend(Node s, boolean haveData) {
         for (Node t = tail, p = t;;) {        // move p to last node and append
             Node n, u;                        // temps for reads of next & tail
-            if (p == null && (p = head) == null) {
+            if (p == null && (p = head) == null) {/**未加入任何节点*/
                 if (casHead(null, s))
                     return s;                 // initialize
             }

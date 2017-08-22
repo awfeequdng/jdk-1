@@ -350,7 +350,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                     // Successful CAS is the linearization point
                     // for e to become an element of this queue,
                     // and for newNode to become "live".
-                    if (p != t) /**隔了一个node*/// hop two nodes at a time
+                    if (p != t) /**隔了一个node，中间有其他线程插入*/// hop two nodes at a time
                         casTail(t, newNode);  // Failure is OK.
                     return true;
                 }

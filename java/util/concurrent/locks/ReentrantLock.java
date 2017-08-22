@@ -341,6 +341,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * interrupt over normal or reentrant acquisition of the lock.
      *
      * @throws InterruptedException if the current thread is interrupted
+     *
+     *    在等待得到锁的时候，如果该线程被打断则抛出异常，不会执行下面的代码
      */
     public void lockInterruptibly() throws InterruptedException {
         sync.acquireInterruptibly(1);
