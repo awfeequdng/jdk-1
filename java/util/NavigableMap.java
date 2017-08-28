@@ -297,6 +297,9 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * It does not support the {@code add} or {@code addAll} operations.
      *
      * @return a navigable set view of the keys in this map
+     *
+     *    返回升序排列的key的集合，如果在迭代过程中修改集合（不使用迭代器的remove），迭代的结果无法保证
+     *    返回的set和原map相互影响
      */
     NavigableSet<K> navigableKeySet();
 
@@ -313,6 +316,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * It does not support the {@code add} or {@code addAll} operations.
      *
      * @return a reverse order navigable set view of the keys in this map
+     *
+     *   同上，只不过是按降序
      */
     NavigableSet<K> descendingKeySet();
 
@@ -349,6 +354,10 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      *         {@code toKey}; or if this map itself has a restricted
      *         range, and {@code fromKey} or {@code toKey} lies
      *         outside the bounds of the range
+     *
+     *         截取fromKey和toKey之间，后面的boolean变量表示等于是否包含
+     *
+     *         往新的map插入小于fromKey或者大于toKey将抛出异常
      */
     NavigableMap<K,V> subMap(K fromKey, boolean fromInclusive,
                              K toKey,   boolean toInclusive);
@@ -379,6 +388,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws IllegalArgumentException if this map itself has a
      *         restricted range, and {@code toKey} lies outside the
      *         bounds of the range
+     *
+     *         同上
      */
     NavigableMap<K,V> headMap(K toKey, boolean inclusive);
 
@@ -408,6 +419,8 @@ public interface NavigableMap<K,V> extends SortedMap<K,V> {
      * @throws IllegalArgumentException if this map itself has a
      *         restricted range, and {@code fromKey} lies outside the
      *         bounds of the range
+     *
+     *         同上
      */
     NavigableMap<K,V> tailMap(K fromKey, boolean inclusive);
 

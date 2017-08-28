@@ -152,6 +152,10 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  *
  * @since 1.5
  * @author Doug Lea
+ *
+ *    通常用于限制线程数量
+ *    信号量，初始化一个值，访问时减1，为0时阻塞，释放后加1
+ *    如果初始化值为1，则可以作为互斥锁，但是因为没有存占有锁的线程，所以一个线程持有锁，另一个线程可以释放
  */
 public class Semaphore implements java.io.Serializable {
     private static final long serialVersionUID = -3222578661600680210L;
@@ -307,6 +311,8 @@ public class Semaphore implements java.io.Serializable {
      * interrupted status is cleared.
      *
      * @throws InterruptedException if the current thread is interrupted
+     *
+     *   如果该线程在调用此方法中断，或者在阻塞中中断，抛出异常
      */
     public void acquire() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);

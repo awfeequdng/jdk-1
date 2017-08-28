@@ -149,10 +149,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         protected final boolean tryRelease(int releases) {
             int c = getState() - releases;
-            if (Thread.currentThread() != getExclusiveOwnerThread())
+            if (Thread.currentThread() != getExclusiveOwnerThread())/**如果当前线程和占锁的线程不是同一个*/
                 throw new IllegalMonitorStateException();
             boolean free = false;
-            if (c == 0) {
+            if (c == 0) {/**表示当前线程完全释放锁*/
                 free = true;
                 setExclusiveOwnerThread(null);
             }
@@ -240,7 +240,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if (!hasQueuedPredecessors() &&
+                if (!hasQueuedPredecessors() &&/**公平和不公平的分别，公平先判断之前是否有比此先等待的线程，有就直接跳过*/
                     compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);
                     return true;
@@ -291,6 +291,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * current thread becomes disabled for thread scheduling
      * purposes and lies dormant until the lock has been acquired,
      * at which time the lock hold count is set to one.
+     *
+     *   1. 先试图获取锁，失败执行2，成功则跳出
+     *   2. 再次试图获取锁，失败执行3，成功则跳出
+     *   3. 判断持有锁的是否为当前线程，是，state+1，否执行4
+     *   4. 循环插入等待队列
+     *   5. 判断前一个节点是否为头结点，是进入6，不是进入7
+     *   6. 尝试获取锁，失败执行7，成功则设置当前节点为头结点并跳出
+     *   7. 判断前一个节点是否为signal，是则park，否则寻找之前不为cancel的节点，设置为sigal，最后进入5
      */
     public void lock() {
         sync.lock();
@@ -465,6 +473,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *
      * @throws IllegalMonitorStateException if the current thread does not
      *         hold this lock
+     *
+     *
+     *  修改独占线程为null，修改state-1
      */
     public void unlock() {
         sync.release(1);

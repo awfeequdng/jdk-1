@@ -34,8 +34,6 @@
  */
 
 package java.util.concurrent.locks;
-import sun.misc.Unsafe;
-
 /**
  * Basic thread blocking primitives for creating locks and other
  * synchronization classes.
@@ -116,6 +114,8 @@ import sun.misc.Unsafe;
  *     LockSupport.unpark(waiters.peek());
  *   }
  * }}</pre>
+ *
+ *   类似于信号量，不过只能有一个，park方阻塞，在该线程被打断时返回，或者在任意时间返回（所以必须放在循环里）
  */
 public class LockSupport {
     private LockSupport() {} // Cannot be instantiated.

@@ -25,9 +25,10 @@
 
 package java.lang;
 
+import sun.misc.VM;
+
 import java.io.PrintStream;
 import java.util.Arrays;
-import sun.misc.VM;
 
 /**
  * A thread group represents a set of threads. In addition, a thread
@@ -91,6 +92,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *               thread in the specified thread group.
      * @see     java.lang.ThreadGroup#checkAccess()
      * @since   JDK1.0
+     *
+     *    创建线程组，该线程组的父线程组是当前线程坐在的线程组
      */
     public ThreadGroup(String name) {
         this(Thread.currentThread().getThreadGroup(), name);
@@ -117,6 +120,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
         this(checkParentAccess(parent), parent, name);
     }
 
+    /**copy父线程组的配置，并把自己打入到父线程组的儿子中*/
     private ThreadGroup(Void unused, ThreadGroup parent, String name) {
         this.name = name;
         this.maxPriority = parent.maxPriority;
@@ -222,6 +226,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @see        java.lang.SecurityException
      * @see        java.lang.ThreadGroup#checkAccess()
      * @since      JDK1.0
+     *
+     *   当他的最后一个线程执行完，或者最后一个线程组被销毁，则自动销毁
      */
     public final void setDaemon(boolean daemon) {
         checkAccess();
@@ -255,6 +261,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @see        java.lang.SecurityException
      * @see        java.lang.ThreadGroup#checkAccess()
      * @since      JDK1.0
+     *
+     *    设置最大优先级，取min（传入的参数，父线程组的优先级）
      */
     public final void setMaxPriority(int pri) {
         int ngroupsSnapshot;
@@ -286,6 +294,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *          argument or one of its ancestor thread groups;
      *          <code>false</code> otherwise.
      * @since   JDK1.0
+     *
+     *    判断是否是自己的儿子
      */
     public final boolean parentOf(ThreadGroup g) {
         for (; g != null ; g = g.parent) {
@@ -332,6 +342,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *          group as an ancestor
      *
      * @since   JDK1.0
+     *
+     *    返回该线程组下所有活动的线程+递归子线程组，粗略估计值
      */
     public int activeCount() {
         int result;
@@ -378,6 +390,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *          the current thread cannot access this thread group
      *
      * @since   JDK1.0
+     *    返回该线程组所有活动的线程的引用
      */
     public int enumerate(Thread list[]) {
         checkAccess();
@@ -416,6 +429,7 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *          the current thread cannot access this thread group
      *
      * @since   JDK1.0
+     *     如果recurse为true，则递归所有子线程组
      */
     public int enumerate(Thread list[], boolean recurse) {
         checkAccess();
@@ -469,6 +483,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      *          an ancestor
      *
      * @since   JDK1.0
+     *
+     *    返回线程组和其子组活动数量，只是估计
      */
     public int activeGroupCount() {
         int ngroupsSnapshot;
@@ -629,6 +645,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @see        java.lang.SecurityException
      * @see        java.lang.ThreadGroup#checkAccess()
      * @since      1.2
+     *
+     *   打断所有该线程组和其子组的所有线程
      */
     public final void interrupt() {
         int ngroupsSnapshot;
@@ -767,7 +785,9 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @exception  SecurityException  if the current thread cannot modify this
      *               thread group.
      * @see        java.lang.ThreadGroup#checkAccess()
-     * @since      JDK1.0
+     * @since      JDK1.0、
+     *
+     *    删除该线程组及其子组，如果线程组里的线程没有停止，或者线程组已经被销毁，抛出异常
      */
     public final void destroy() {
         int ngroupsSnapshot;
@@ -981,6 +1001,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * output. This method is useful only for debugging.
      *
      * @since   JDK1.0
+     *
+     *   将次线程组的信息打印到控制台，并递归所有子组
      */
     public void list() {
         list(System.out, 0);
@@ -1046,6 +1068,8 @@ class ThreadGroup implements Thread.UncaughtExceptionHandler {
      * @param   t   the thread that is about to exit.
      * @param   e   the uncaught exception.
      * @since   JDK1.0
+     *
+     *    首先传给父线程组，没有则用默认的异常捕获器
      */
     public void uncaughtException(Thread t, Throwable e) {
         if (parent != null) {

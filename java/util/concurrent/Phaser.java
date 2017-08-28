@@ -35,8 +35,6 @@
 
 package java.util.concurrent;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
@@ -257,6 +255,8 @@ import java.util.concurrent.locks.LockSupport;
  *
  * @since 1.7
  * @author Doug Lea
+ *
+ *    可以注册和注销state，相比于CountDownLatch和CyclicBarrier（他们中的state都是固定的）
  */
 public class Phaser {
     /*
@@ -291,6 +291,13 @@ public class Phaser {
      * The phase of a subphaser is allowed to lag that of its
      * ancestors until it is actually accessed -- see method
      * reconcileState.
+     *
+     *
+     *   1. state的最高位是一个标志位，1表示Phaser的线程同步已经结束，0表示线程同步正在进行
+
+     2. state的低32位中，低16位表示没有到达的线程数量，高16位表示Parties值
+
+     3. state的高32位除了最高位之外的其他31位表示的Phaser的phase，可以理解为第多少次同步（从0开始计算）。
      */
     private volatile long state;
 
@@ -307,7 +314,7 @@ public class Phaser {
     private static final int  ONE_ARRIVAL     = 1;
     private static final int  ONE_PARTY       = 1 << PARTIES_SHIFT;
     private static final int  ONE_DEREGISTER  = ONE_ARRIVAL|ONE_PARTY;
-    private static final int  EMPTY           = 1;
+    private static final int  EMPTY           = 1;/**默认信号量*/
 
     // The following unpacking methods are usually manually inlined
 
@@ -346,8 +353,8 @@ public class Phaser {
      * use two of them, alternating across even and odd phases.
      * Subphasers share queues with root to speed up releases.
      */
-    private final AtomicReference<QNode> evenQ;
-    private final AtomicReference<QNode> oddQ;
+    private final AtomicReference<QNode> evenQ;/**偶*/
+    private final AtomicReference<QNode> oddQ;/**奇*/
 
     private AtomicReference<QNode> queueFor(int phase) {
         return ((phase & 1) == 0) ? evenQ : oddQ;
@@ -383,23 +390,23 @@ public class Phaser {
         for (;;) {
             long s = (root == this) ? state : reconcileState();
             int phase = (int)(s >>> PHASE_SHIFT);
-            if (phase < 0)
+            if (phase < 0)/**表示超过了最大值*/
                 return phase;
             int counts = (int)s;
             int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
             if (unarrived <= 0)
                 throw new IllegalStateException(badArrive(s));
             if (UNSAFE.compareAndSwapLong(this, stateOffset, s, s-=adjust)) {
-                if (unarrived == 1) {
-                    long n = s & PARTIES_MASK;  // base of next state
-                    int nextUnarrived = (int)n >>> PARTIES_SHIFT;
-                    if (root == this) {
-                        if (onAdvance(phase, nextUnarrived))
+                if (unarrived == 1) {/**实际表示unarrived=0*/
+                    long n = s & PARTIES_MASK; /**16-32位，其他位为0*/ // base of next state
+                    int nextUnarrived = (int)n >>> PARTIES_SHIFT;/**parties个数*/
+                    if (root == this) {/**没有父*/
+                        if (onAdvance(phase, nextUnarrived))/**返回true表示停止*/
                             n |= TERMINATION_BIT;
                         else if (nextUnarrived == 0)
                             n |= EMPTY;
                         else
-                            n |= nextUnarrived;
+                            n |= nextUnarrived;/**初始化unarrived的个数*/
                         int nextPhase = (phase + 1) & MAX_PHASE;
                         n |= (long)nextPhase << PHASE_SHIFT;
                         UNSAFE.compareAndSwapLong(this, stateOffset, s, n);
@@ -437,14 +444,14 @@ public class Phaser {
             if (registrations > MAX_PARTIES - parties)
                 throw new IllegalStateException(badRegister(s));
             phase = (int)(s >>> PHASE_SHIFT);
-            if (phase < 0)
+            if (phase < 0)/**最高位时是0*/
                 break;
             if (counts != EMPTY) {                  // not 1st registration
-                if (parent == null || reconcileState() == s) {
+                if (parent == null || reconcileState() == s) {/**root=this*/
                     if (unarrived == 0)             // wait out advance
-                        root.internalAwaitAdvance(phase, null);
+                        root.internalAwaitAdvance(phase, null);/***/
                     else if (UNSAFE.compareAndSwapLong(this, stateOffset,
-                                                       s, s + adjust))
+                                                       s, s + adjust))/**parties+1，unarrive+1*/
                         break;
                 }
             }
@@ -493,13 +500,13 @@ public class Phaser {
             int phase, p;
             // CAS to root phase with current parties, tripping unarrived
             while ((phase = (int)(root.state >>> PHASE_SHIFT)) !=
-                   (int)(s >>> PHASE_SHIFT) &&
+                   (int)(s >>> PHASE_SHIFT) &&/**当子高32位和父高32位不一样时，更新子的跟父一样*/
                    !UNSAFE.compareAndSwapLong
                    (this, stateOffset, s,
-                    s = (((long)phase << PHASE_SHIFT) |
-                         ((phase < 0) ? (s & COUNTS_MASK) :
-                          (((p = (int)s >>> PARTIES_SHIFT) == 0) ? EMPTY :
-                           ((s & PARTIES_MASK) | p))))))
+                    s = (((long)phase << PHASE_SHIFT) |/**重置此高32位为父高32为*/
+                         ((phase < 0) ? (s & COUNTS_MASK) :/**取低32位*/
+                          (((p = (int)s >>> PARTIES_SHIFT) == 0)/**高16位==0*/ ? EMPTY :
+                           ((s & PARTIES_MASK) | p))))))/**16-32位|16-32位*/
                 s = state;
         }
         return s;
@@ -547,9 +554,11 @@ public class Phaser {
      * next phase
      * @throws IllegalArgumentException if parties less than zero
      * or greater than the maximum number of parties supported
+     *
+     *   数量大于等于0，小于等于2^16
      */
     public Phaser(Phaser parent, int parties) {
-        if (parties >>> PARTIES_SHIFT != 0)
+        if (parties >>> PARTIES_SHIFT != 0)/**数量限制*/
             throw new IllegalArgumentException("Illegal number of parties");
         int phase = 0;
         this.parent = parent;
@@ -586,6 +595,8 @@ public class Phaser {
      * terminated, in which case registration has no effect.
      * @throws IllegalStateException if attempting to register more
      * than the maximum supported number of parties
+     *
+     *   返回parse
      */
     public int register() {
         return doRegister(1);
@@ -629,6 +640,9 @@ public class Phaser {
      * @return the arrival phase number, or a negative value if terminated
      * @throws IllegalStateException if not terminated and the number
      * of unarrived parties would become negative
+     *
+     *
+     *    返回phase的值，如果小于0表示terminated
      */
     public int arrive() {
         return doArrive(ONE_ARRIVAL);
@@ -686,9 +700,9 @@ public class Phaser {
                 throw new IllegalStateException(badArrive(s));
             if (UNSAFE.compareAndSwapLong(this, stateOffset, s,
                                           s -= ONE_ARRIVAL)) {
-                if (unarrived > 1)
+                if (unarrived > 1)/**大于1阻塞当前线程*/
                     return root.internalAwaitAdvance(phase, null);
-                if (root != this)
+                if (root != this)/**调用父*/
                     return parent.arriveAndAwaitAdvance();
                 long n = s & PARTIES_MASK;  // base of next state
                 int nextUnarrived = (int)n >>> PARTIES_SHIFT;
@@ -969,17 +983,19 @@ public class Phaser {
 
     /**
      * Removes and signals threads from queue for phase.
+     *
+     *   当arrive=parties时，唤醒并删除不是最新的phase的线程
      */
     private void releaseWaiters(int phase) {
         QNode q;   // first element of queue
         Thread t;  // its thread
         AtomicReference<QNode> head = (phase & 1) == 0 ? evenQ : oddQ;
         while ((q = head.get()) != null &&
-               q.phase != (int)(root.state >>> PHASE_SHIFT)) {
+               q.phase != (int)(root.state >>> PHASE_SHIFT)) {/**因为现在的phase+1*/
             if (head.compareAndSet(q, q.next) &&
                 (t = q.thread) != null) {
                 q.thread = null;
-                LockSupport.unpark(t);
+                LockSupport.unpark(t);/**唤醒线程*/
             }
         }
     }
@@ -1032,6 +1048,8 @@ public class Phaser {
      * @param node if non-null, the wait node to track interrupt and timeout;
      * if null, denotes noninterruptible wait
      * @return current phase
+     *
+     *    阻塞
      */
     private int internalAwaitAdvance(int phase, QNode node) {
         // assert root == this;
