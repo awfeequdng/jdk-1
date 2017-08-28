@@ -39,37 +39,11 @@ import java.io.ObjectStreamField;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.AbstractMap;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ForkJoinPool;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.DoubleBinaryOperator;
-import java.util.function.Function;
-import java.util.function.IntBinaryOperator;
-import java.util.function.LongBinaryOperator;
-import java.util.function.ToDoubleBiFunction;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntBiFunction;
-import java.util.function.ToIntFunction;
-import java.util.function.ToLongBiFunction;
-import java.util.function.ToLongFunction;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 /**
@@ -1013,20 +987,20 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         int binCount = 0;
         for (Node<K,V>[] tab = table;;) {
             Node<K,V> f; int n, i, fh;
-            if (tab == null || (n = tab.length) == 0)
+            if (tab == null || (n = tab.length) == 0)/**如果还没有初始化*/
                 tab = initTable();
-            else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+            else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {/**如果在数组中不存在*/
                 if (casTabAt(tab, i, null,
                              new Node<K,V>(hash, key, value, null)))
                     break;                   // no lock when adding to empty bin
             }
-            else if ((fh = f.hash) == MOVED)
+            else if ((fh = f.hash) == MOVED)/***???*/
                 tab = helpTransfer(tab, f);
             else {
                 V oldVal = null;
                 synchronized (f) {
-                    if (tabAt(tab, i) == f) {
-                        if (fh >= 0) {
+                    if (tabAt(tab, i) == f) {/**如果不等于说明该节点被删除，就直接跳过*/
+                        if (fh >= 0) {/**如果是链表*/
                             binCount = 1;
                             for (Node<K,V> e = f;; ++binCount) {
                                 K ek;
@@ -1034,19 +1008,19 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                     ((ek = e.key) == key ||
                                      (ek != null && key.equals(ek)))) {
                                     oldVal = e.val;
-                                    if (!onlyIfAbsent)
+                                    if (!onlyIfAbsent)/**如果不对比value，直接覆盖原来的值*/
                                         e.val = value;
                                     break;
                                 }
                                 Node<K,V> pred = e;
-                                if ((e = e.next) == null) {
+                                if ((e = e.next) == null) {/**如果没有找到，则在最后添加一个新节点*/
                                     pred.next = new Node<K,V>(hash, key,
                                                               value, null);
                                     break;
                                 }
                             }
                         }
-                        else if (f instanceof TreeBin) {
+                        else if (f instanceof TreeBin) {/**如果是红黑树*/
                             Node<K,V> p;
                             binCount = 2;
                             if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,
@@ -1059,7 +1033,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     }
                 }
                 if (binCount != 0) {
-                    if (binCount >= TREEIFY_THRESHOLD)
+                    if (binCount >= TREEIFY_THRESHOLD)/**如果大于8则转变为红黑树*/
                         treeifyBin(tab, i);
                     if (oldVal != null)
                         return oldVal;
@@ -2688,9 +2662,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                         p = pr;
                     else if ((pk = p.key) == k || (pk != null && k.equals(pk)))
                         return p;
-                    else if (pl == null)
+                    else if (pl == null)/**??*/
                         p = pr;
-                    else if (pr == null)
+                    else if (pr == null)/**???*/
                         p = pl;
                     else if ((kc != null ||
                               (kc = comparableClassFor(k)) != null) &&

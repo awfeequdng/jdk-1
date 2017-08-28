@@ -219,7 +219,7 @@ public class CyclicBarrier {
                     if (command != null)
                         command.run();
                     ranAction = true;
-                    nextGeneration();
+                    nextGeneration();/**重新计数，并唤醒所有线程*/
                     return 0;
                 } finally {
                     if (!ranAction)
@@ -235,7 +235,7 @@ public class CyclicBarrier {
                     else if (nanos > 0L)
                         nanos = trip.awaitNanos(nanos);
                 } catch (InterruptedException ie) {
-                    if (g == generation && ! g.broken) {
+                    if (g == generation/**没有reset或者count=0*/ && ! g.broken) {/**如果线程被打断，中断所有*/
                         breakBarrier();
                         throw ie;
                     } else {

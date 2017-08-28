@@ -286,6 +286,12 @@ import java.util.concurrent.TimeUnit;
  *
  * @since 1.5
  * @author Doug Lea
+ *
+ *   提供一个先进先出的阻塞的队列方式提供同步，内部维护一个int变量（信号量），和一个等待队列（链表，先进先出）node
+ *   子类必须使用getState（），setState（int）和compareAndSetState（int，int）方法完成同步操作
+ *   子类应该定义为非公共内部助手类
+ *
+ *
  */
 public abstract class AbstractQueuedSynchronizer
     extends AbstractOwnableSynchronizer
@@ -392,17 +398,17 @@ public abstract class AbstractQueuedSynchronizer
 
         /** waitStatus value to indicate thread has cancelled
          *
-         *      线程被取消
+         *      线程被取消,超时或者被打断
          * */
         static final int CANCELLED =  1;
         /** waitStatus value to indicate successor's thread needs unparking
          *
-         *       后续线程需要开启
+         *       下一个节点的线程需要本节点在释放锁或者在取消时唤醒
          * */
         static final int SIGNAL    = -1;
         /** waitStatus value to indicate thread is waiting on condition
          *
-         *     正在处于等待状态
+         *     在condition队列里
          * */
         static final int CONDITION = -2;
         /**
@@ -628,7 +634,7 @@ public abstract class AbstractQueuedSynchronizer
         Node pred = tail;
         if (pred != null) {
             node.prev = pred;
-            if (compareAndSetTail(pred, node)) {
+            if (compareAndSetTail(pred, node)) {/**设置新的队尾*/
                 pred.next = node;
                 return node;
             }
@@ -672,7 +678,7 @@ public abstract class AbstractQueuedSynchronizer
          * non-cancelled successor.
          */
         Node s = node.next;
-        if (s == null || s.waitStatus > 0) {
+        if (s == null || s.waitStatus > 0) {/**如果下一个节点为null，或者取消了*/
             s = null;
             for (Node t = tail; t != null && t != node; t = t.prev)
                 if (t.waitStatus <= 0)
@@ -748,7 +754,7 @@ public abstract class AbstractQueuedSynchronizer
             (h = head) == null || h.waitStatus < 0) {
             Node s = node.next;
             if (s == null || s.isShared())
-                doReleaseShared();
+                doReleaseShared();/**唤醒下一个共享读线程*/
         }
     }
 
@@ -825,9 +831,10 @@ public abstract class AbstractQueuedSynchronizer
              * Predecessor was cancelled. Skip over predecessors and
              * indicate retry.
              */
+            /**waitStatus>0,表示该节点被cancel*/
             do {
                 node.prev = pred = pred.prev;
-            } while (pred.waitStatus > 0);
+            } while (pred.waitStatus > 0);/**找到前一个状态<=0的节点，和node链接*/
             pred.next = node;
         } else {
             /*
@@ -879,19 +886,19 @@ public abstract class AbstractQueuedSynchronizer
         try {
             boolean interrupted = false;
             for (;;) {
-                final Node p = node.predecessor();
-                if (p == head && tryAcquire(arg)) {
+                final Node p = node.predecessor();/**获取前一个节点*/
+                if (p == head && tryAcquire(arg)) {/**是头结点的话就循环修改状态，尝试获取信号量*/
                     setHead(node);
                     p.next = null; // help GC
                     failed = false;
                     return interrupted;
                 }
                 if (shouldParkAfterFailedAcquire(p, node) &&
-                    parkAndCheckInterrupt())
+                    parkAndCheckInterrupt())/**park并返回该线程是否被interrupted*/
                     interrupted = true;
             }
         } finally {
-            if (failed)
+            if (failed)/**异常结束，取消*/
                 cancelAcquire(node);
         }
     }
@@ -907,19 +914,19 @@ public abstract class AbstractQueuedSynchronizer
         try {
             for (;;) {
                 final Node p = node.predecessor();
-                if (p == head && tryAcquire(arg)) {
+                if (p == head && tryAcquire(arg)) {/**如果前一个是head节点，尝试一次*/
                     setHead(node);
                     p.next = null; // help GC
                     failed = false;
                     return;
                 }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    parkAndCheckInterrupt())
-                    throw new InterruptedException();
+                if (shouldParkAfterFailedAcquire(p, node) &&/**如果可以让当前线程park*/
+                    parkAndCheckInterrupt())/**park，被唤醒是检查当前状态是否被打断*/
+                    throw new InterruptedException();/**打断抛出异常*/
             }
         } finally {
             if (failed)
-                cancelAcquire(node);
+                cancelAcquire(node);/**当前线程被打断，取消*/
         }
     }
 
@@ -1282,10 +1289,10 @@ public abstract class AbstractQueuedSynchronizer
      * @return the value returned from {@link #tryRelease}
      */
     public final boolean release(int arg) {
-        if (tryRelease(arg)) {
+        if (tryRelease(arg)) {/**如果成功释放锁*/
             Node h = head;
             if (h != null && h.waitStatus != 0)
-                unparkSuccessor(h);
+                unparkSuccessor(h);/**唤醒下一个节点的等待的线程*/
             return true;
         }
         return false;
@@ -1481,6 +1488,8 @@ public abstract class AbstractQueuedSynchronizer
      * #tryAcquireShared}) then it is guaranteed that the current thread
      * is not the first queued thread.  Used only as a heuristic in
      * ReentrantReadWriteLock.
+     *
+     *   返回true表示队列中等待的第一个线程是独占模式
      */
     final boolean apparentlyFirstQueuedIsExclusive() {
         Node h, s;
@@ -1532,6 +1541,9 @@ public abstract class AbstractQueuedSynchronizer
      *         current thread, and {@code false} if the current thread
      *         is at the head of the queue or the queue is empty
      * @since 1.7
+     *
+     *   如果有节点在当前节点之前，返回true
+     *   如果队列为空，或者当前结点为head返回false
      */
     public final boolean hasQueuedPredecessors() {
         // The correctness of this depends on head being initialized

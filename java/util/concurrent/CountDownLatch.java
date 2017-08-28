@@ -226,6 +226,9 @@ public class CountDownLatch {
      *
      * @throws InterruptedException if the current thread is interrupted
      *         while waiting
+     *
+     *         使当前线程等待，直到调用countdown使计数器为0或者被打断
+     *
      */
     public void await() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
@@ -271,6 +274,8 @@ public class CountDownLatch {
      *         if the waiting time elapsed before the count reached zero
      * @throws InterruptedException if the current thread is interrupted
      *         while waiting
+     *
+     *         同上，加个等待时间
      */
     public boolean await(long timeout, TimeUnit unit)
         throws InterruptedException {
@@ -286,6 +291,8 @@ public class CountDownLatch {
      * thread scheduling purposes.
      *
      * <p>If the current count equals zero then nothing happens.
+     *
+     *   如果当前计数器为0，没反应，不为0，递减，直到为0时，唤醒所有等待的线程
      */
     public void countDown() {
         sync.releaseShared(1);
