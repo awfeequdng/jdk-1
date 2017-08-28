@@ -455,6 +455,7 @@ public class Phaser {
                         break;
                 }
             }
+
             else if (parent == null) {              // 1st root registration
                 long next = ((long)phase << PHASE_SHIFT) | adjust;
                 if (UNSAFE.compareAndSwapLong(this, stateOffset, s, next))
