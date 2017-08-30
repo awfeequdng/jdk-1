@@ -67,6 +67,8 @@ import java.util.*;
  *
  * @since 1.5
  * @author Doug Lea
+ * 
+ * gmc
  */
 public abstract class AbstractExecutorService implements ExecutorService {
 
