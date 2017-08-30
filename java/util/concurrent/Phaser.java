@@ -734,6 +734,8 @@ public class Phaser {
      * @return the next arrival phase number, or the argument if it is
      * negative, or the (negative) {@linkplain #getPhase() current phase}
      * if terminated
+     *
+     *   返回最新的phase，或者前一个（如果当前phase正好等于参数）
      */
     public int awaitAdvance(int phase) {
         final Phaser root = this.root;
@@ -760,6 +762,8 @@ public class Phaser {
      * negative, or the (negative) {@linkplain #getPhase() current phase}
      * if terminated
      * @throws InterruptedException if thread interrupted while waiting
+     *
+     *    同上，线程中断会抛出一样
      */
     public int awaitAdvanceInterruptibly(int phase)
         throws InterruptedException {
@@ -1060,8 +1064,8 @@ public class Phaser {
         int spins = SPINS_PER_ARRIVAL;
         long s;
         int p;
-        while ((p = (int)((s = state) >>> PHASE_SHIFT)) == phase) {
-            if (node == null) {           // spinning in noninterruptible mode
+        while ((p = (int)((s = state) >>> PHASE_SHIFT)) == phase) {/**如果phase没有变化*/
+            if (node == null) { /**如果以不间断模式*/          // spinning in noninterruptible mode
                 int unarrived = (int)s & UNARRIVED_MASK;
                 if (unarrived != lastUnarrived &&
                     (lastUnarrived = unarrived) < NCPU)
@@ -1072,18 +1076,19 @@ public class Phaser {
                     node.wasInterrupted = interrupted;
                 }
             }
-            else if (node.isReleasable()) // done or aborted
+            /**以下是间断模式*/
+            else if (node.isReleasable()) /**返回是否已经执行完了或者被中断了或者等待时间过去了*/// done or aborted
                 break;
-            else if (!queued) {           // push onto queue
+            else if (!queued) {     /**没有被加入队列*/      // push onto queue
                 AtomicReference<QNode> head = (phase & 1) == 0 ? evenQ : oddQ;
                 QNode q = node.next = head.get();
                 if ((q == null || q.phase == phase) &&
-                    (int)(state >>> PHASE_SHIFT) == phase) // avoid stale enq
+                    (int)(state >>> PHASE_SHIFT) == phase) /**避免是过期的phase*/// avoid stale enq
                     queued = head.compareAndSet(q, node);
             }
             else {
                 try {
-                    ForkJoinPool.managedBlock(node);
+                    ForkJoinPool.managedBlock(node);/**park*/
                 } catch (InterruptedException ie) {
                     node.wasInterrupted = true;
                 }

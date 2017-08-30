@@ -315,6 +315,15 @@ import java.util.*;
  *
  * @since 1.5
  * @author Doug Lea
+ *
+ *   当前运行数小于corePoolSize时，即使有空闲的线程，当提交一个新的task时，他会创建一个新的线程去执行
+ *   如果超过corePoolSize但小于maximumPoolSize线程运行，则仅当队列已满时才会创建一个新线程
+ *   通过将corePoolSize和maximumPoolSize设置为相同，您将创建一个固定大小的线程池
+ *   通过将maximumPoolSize设置为本质上无限制的值（例如Integer.MAX_VALUE），您可以允许池适应任意数量的并发任务
+ *   核心和最大池大小只能在构建时进行设置，但也可以使用setCorePoolSize（int）和setMaximumPoolSize（int）动态更改池大小。
+ *   使用默认的ThreadFactory创建新的线程
+ *   如果线程数大于corePoolSize，经过指定时间线程就会被销毁，通过 setKeepAliveTime（long，TimeUnit）设置
+ *
  */
 public class ThreadPoolExecutor extends AbstractExecutorService {
     /**

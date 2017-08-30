@@ -152,6 +152,9 @@ public interface ExecutorService extends Executor {
      *         java.lang.RuntimePermission}{@code ("modifyThread")},
      *         or the security manager's {@code checkAccess} method
      *         denies access.
+     *
+     *
+     *         不能有新任务提交，但是会去执行已经提交过的任务
      */
     void shutdown();
 
@@ -177,6 +180,9 @@ public interface ExecutorService extends Executor {
      *         java.lang.RuntimePermission}{@code ("modifyThread")},
      *         or the security manager's {@code checkAccess} method
      *         denies access.
+     *
+     *         不能有新任务提交，旧的任务会全部终止，正在运行的任务会想办法停掉（中断线程，如果runable没有任何可以中断的）
+     *
      */
     List<Runnable> shutdownNow();
 
@@ -337,6 +343,8 @@ public interface ExecutorService extends Executor {
      * @throws ExecutionException if no task successfully completes
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
+     *
+     *         和all的区别就是any会在其中一个任务完成或者抛出异常时取消剩下的任务
      */
     <T> T invokeAny(Collection<? extends Callable<T>> tasks)
         throws InterruptedException, ExecutionException;

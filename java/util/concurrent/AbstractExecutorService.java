@@ -224,7 +224,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
         throws InterruptedException, ExecutionException, TimeoutException {
         return doInvokeAny(tasks, true, unit.toNanos(timeout));
     }
-
+    /**等待所有task执行完毕*/
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
         throws InterruptedException {
         if (tasks == null)
@@ -255,7 +255,7 @@ public abstract class AbstractExecutorService implements ExecutorService {
                     futures.get(i).cancel(true);
         }
     }
-
+    /**如果超时了，就取消等待的线程，中断当前执行的线程*/
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
                                          long timeout, TimeUnit unit)
         throws InterruptedException {

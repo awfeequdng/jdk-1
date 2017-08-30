@@ -115,6 +115,11 @@ public interface Future<V> {
      * @return {@code false} if the task could not be cancelled,
      * typically because it has already completed normally;
      * {@code true} otherwise
+     *
+     *   尝试取消此任务，如果任务完成，或者无法取消，返回false
+     *   如果任务没有被运行，则之后不会被运行
+     *   如果任务正在运行，参数决定是否应该打断此线程
+     *   调用isDone（）或者isCancelled（）返回true
      */
     boolean cancel(boolean mayInterruptIfRunning);
 
@@ -134,6 +139,8 @@ public interface Future<V> {
      * {@code true}.
      *
      * @return {@code true} if this task completed
+     *
+     *   返回是否完成，正常的终止，或者报错，或者主动取消都返回true
      */
     boolean isDone();
 
