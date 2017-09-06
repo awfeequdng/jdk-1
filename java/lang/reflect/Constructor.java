@@ -170,6 +170,8 @@ public final class Constructor<T> extends Executable {
 
     /**
      * {@inheritDoc}
+     *
+     *   返回构造函数所在的类对象
      */
     @Override
     public Class<T> getDeclaringClass() {
@@ -187,6 +189,8 @@ public final class Constructor<T> extends Executable {
 
     /**
      * {@inheritDoc}
+     *
+     *    构造函数的修饰符
      */
     @Override
     public int getModifiers() {
@@ -197,6 +201,14 @@ public final class Constructor<T> extends Executable {
      * {@inheritDoc}
      * @throws GenericSignatureFormatError {@inheritDoc}
      * @since 1.5
+     *
+     *   返回构造函数中的TypeVariable
+     *   class a<E>{
+     *       public <E> a{
+     *
+     *       }
+     *   }
+     *   返回E
      */
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -210,6 +222,8 @@ public final class Constructor<T> extends Executable {
 
     /**
      * {@inheritDoc}
+     *
+     *   返回参数类型
      */
     @Override
     public Class<?>[] getParameterTypes() {
@@ -219,6 +233,8 @@ public final class Constructor<T> extends Executable {
     /**
      * {@inheritDoc}
      * @since 1.8
+     *
+     *  返回参数长度
      */
     public int getParameterCount() { return parameterTypes.length; }
 
@@ -228,6 +244,8 @@ public final class Constructor<T> extends Executable {
      * @throws TypeNotPresentException {@inheritDoc}
      * @throws MalformedParameterizedTypeException {@inheritDoc}
      * @since 1.5
+     *
+     *     返回参数的类型
      */
     @Override
     public Type[] getGenericParameterTypes() {
@@ -236,6 +254,8 @@ public final class Constructor<T> extends Executable {
 
     /**
      * {@inheritDoc}
+     *
+     *  返回声明的异常
      */
     @Override
     public Class<?>[] getExceptionTypes() {
@@ -249,6 +269,8 @@ public final class Constructor<T> extends Executable {
      * @throws TypeNotPresentException {@inheritDoc}
      * @throws MalformedParameterizedTypeException {@inheritDoc}
      * @since 1.5
+     *
+     *  返回声明的异常
      */
     @Override
     public Type[] getGenericExceptionTypes() {
@@ -275,6 +297,8 @@ public final class Constructor<T> extends Executable {
      * Returns a hashcode for this {@code Constructor}. The hashcode is
      * the same as the hashcode for the underlying constructor's
      * declaring class name.
+     *
+     *   同一个类的不同构造函数的hashcode是相等的
      */
     public int hashCode() {
         return getDeclaringClass().getName().hashCode();
@@ -401,6 +425,8 @@ public final class Constructor<T> extends Executable {
      *              throws an exception.
      * @exception ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
+     *
+     *              new一个新的对象，如果是枚举类型则报错
      */
     @CallerSensitive
     public T newInstance(Object ... initargs)
@@ -427,6 +453,8 @@ public final class Constructor<T> extends Executable {
     /**
      * {@inheritDoc}
      * @since 1.5
+     *
+     *   如果是可变的参数 例如int a...
      */
     @Override
     public boolean isVarArgs() {
@@ -438,6 +466,7 @@ public final class Constructor<T> extends Executable {
      * @jls 13.1 The Form of a Binary
      * @since 1.5
      */
+    //todo  以下
     @Override
     public boolean isSynthetic() {
         return super.isSynthetic();

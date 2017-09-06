@@ -28,17 +28,18 @@ package java.lang.reflect;
 import sun.reflect.CallerSensitive;
 import sun.reflect.FieldAccessor;
 import sun.reflect.Reflection;
-import sun.reflect.generics.repository.FieldRepository;
-import sun.reflect.generics.factory.CoreReflectionFactory;
-import sun.reflect.generics.factory.GenericsFactory;
-import sun.reflect.generics.scope.ClassScope;
-import java.lang.annotation.Annotation;
-import java.util.Map;
-import java.util.Objects;
 import sun.reflect.annotation.AnnotationParser;
 import sun.reflect.annotation.AnnotationSupport;
 import sun.reflect.annotation.TypeAnnotation;
 import sun.reflect.annotation.TypeAnnotationParser;
+import sun.reflect.generics.factory.CoreReflectionFactory;
+import sun.reflect.generics.factory.GenericsFactory;
+import sun.reflect.generics.repository.FieldRepository;
+import sun.reflect.generics.scope.ClassScope;
+
+import java.lang.annotation.Annotation;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * A {@code Field} provides information about, and dynamic access to, a
@@ -379,6 +380,9 @@ class Field extends AccessibleObject implements Member {
      *              and the field is an instance field.
      * @exception ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
+     *
+     *              如果表示的static字段，参数可以为空
+     *              如果是基本类型，则转换成对应的包装类
      */
     @CallerSensitive
     public Object get(Object obj)
@@ -750,6 +754,9 @@ class Field extends AccessibleObject implements Member {
      *              and the field is an instance field.
      * @exception ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
+     *
+     *              如果底层字段为final,除非setAccessible（true）
+     *              否则抛出异常
      */
     @CallerSensitive
     public void set(Object obj, Object value)

@@ -25,6 +25,13 @@
 
 package java.lang.reflect;
 
+import sun.misc.ProxyGenerator;
+import sun.misc.VM;
+import sun.reflect.CallerSensitive;
+import sun.reflect.Reflection;
+import sun.reflect.misc.ReflectUtil;
+import sun.security.util.SecurityConstants;
+
 import java.lang.ref.WeakReference;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -34,12 +41,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
-import sun.misc.ProxyGenerator;
-import sun.misc.VM;
-import sun.reflect.CallerSensitive;
-import sun.reflect.Reflection;
-import sun.reflect.misc.ReflectUtil;
-import sun.security.util.SecurityConstants;
 
 /**
  * {@code Proxy} provides static methods for creating dynamic proxy
@@ -224,6 +225,10 @@ import sun.security.util.SecurityConstants;
  * @author      Peter Jones
  * @see         InvocationHandler
  * @since       1.3
+ *
+ *   代理类是公共的，最终的，而不是抽象的，如果所有代理接口是公共的。
+     如果任何代理接口非公开，代理类是非公开的，最终的，而不是抽象的。
+     hashCode，equals或toString方法的调用将于接口中声明的方法一样，都调用invoke
  */
 public class Proxy implements java.io.Serializable {
 

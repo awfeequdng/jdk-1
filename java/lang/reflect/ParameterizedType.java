@@ -44,7 +44,7 @@ package java.lang.reflect;
  *
  * @since 1.5
  *
- *     参数化类型，即泛型
+ *     参数化类型，即泛型 例如colletion<string>
  */
 public interface ParameterizedType extends Type {
     /**
@@ -77,6 +77,7 @@ public interface ParameterizedType extends Type {
      * @since 1.5
      *
      *     返回声明的class或interface
+     *     colletion<string> 返回colletion（class类型）
      */
     Type getRawType();
 

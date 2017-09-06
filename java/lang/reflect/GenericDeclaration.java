@@ -45,7 +45,7 @@ public interface GenericDeclaration extends AnnotatedElement {
      *     the format specified in
      *     <cite>The Java&trade; Virtual Machine Specification</cite>
      *
-     *     返回所有泛型类型
+     *     返回声明的所有泛型类型
      */
     public TypeVariable<?>[] getTypeParameters();
 }

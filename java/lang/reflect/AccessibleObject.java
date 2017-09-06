@@ -25,10 +25,11 @@
 
 package java.lang.reflect;
 
-import java.security.AccessController;
 import sun.reflect.Reflection;
 import sun.reflect.ReflectionFactory;
+
 import java.lang.annotation.Annotation;
+import java.security.AccessController;
 
 /**
  * The AccessibleObject class is the base class for Field, Method and
@@ -53,6 +54,8 @@ import java.lang.annotation.Annotation;
  * @see ReflectPermission
  *
  * @since 1.2
+ *
+ *   禁止访问权限检查
  */
 public class AccessibleObject implements AnnotatedElement {
 
@@ -89,6 +92,7 @@ public class AccessibleObject implements AnnotatedElement {
      * @see SecurityManager#checkPermission
      * @see java.lang.RuntimePermission
      */
+    //todo
     public static void setAccessible(AccessibleObject[] array, boolean flag)
         throws SecurityException {
         SecurityManager sm = System.getSecurityManager();
@@ -122,6 +126,9 @@ public class AccessibleObject implements AnnotatedElement {
      * @throws SecurityException if the request is denied.
      * @see SecurityManager#checkPermission
      * @see java.lang.RuntimePermission
+     *
+     *  如果有安全管理器，
+     *  则使用ReflectPermission（“suppressAccessChecks”）权限调用其checkPermission方法。
      */
     public void setAccessible(boolean flag) throws SecurityException {
         SecurityManager sm = System.getSecurityManager();
@@ -131,6 +138,7 @@ public class AccessibleObject implements AnnotatedElement {
 
     /* Check that you aren't exposing java.lang.Class.<init> or sensitive
        fields in java.lang.Class. */
+    /**对于class对象的class即Class.class 不能访问*/
     private static void setAccessible0(AccessibleObject obj, boolean flag)
         throws SecurityException
     {

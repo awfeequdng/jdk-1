@@ -48,6 +48,8 @@ import java.io.ObjectStreamField;
  * @see java.net.Socket
  * @see java.net.ServerSocket
  * @since 1.4
+ *
+ *   IP地址（host）+端口号的封装类
  */
 public class InetSocketAddress
     extends SocketAddress
@@ -161,6 +163,8 @@ public class InetSocketAddress
      * @param   port    The port number
      * @throws IllegalArgumentException if the port parameter is outside the specified
      * range of valid port values.
+     *
+     *   使用通配符地址0，0，0，0
      */
     public InetSocketAddress(int port) {
         this(InetAddress.anyLocalAddress(), port);
@@ -249,6 +253,8 @@ public class InetSocketAddress
      * @return  a {@code InetSocketAddress} representing the unresolved
      *          socket address
      * @since 1.5
+     *
+     *    创建InetSocketAddress，不将host解析为InetAddress，host标记为未解析
      */
     public static InetSocketAddress createUnresolved(String host, int port) {
         return new InetSocketAddress(checkPort(port), checkHost(host));
@@ -329,6 +335,8 @@ public class InetSocketAddress
      * Gets the {@code InetAddress}.
      *
      * @return the InetAdress or {@code null} if it is unresolved.
+     *
+     *   如果根据host创建，InetAddress未解析，返回null
      */
     public final InetAddress getAddress() {
         return holder.getAddress();
@@ -340,6 +348,8 @@ public class InetSocketAddress
      * address was created with a literal IP address.
      *
      * @return  the hostname part of the address.
+     *
+     *   如果根据ip地址创建，会引发反响查找，及根据ip查找host
      */
     public final String getHostName() {
         return holder.getHostName();

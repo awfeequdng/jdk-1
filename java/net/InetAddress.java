@@ -25,26 +25,18 @@
 
 package java.net;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Random;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.ServiceLoader;
-import java.security.AccessController;
-import java.io.ObjectStreamException;
-import java.io.ObjectStreamField;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectInputStream.GetField;
-import java.io.ObjectOutputStream;
-import java.io.ObjectOutputStream.PutField;
-import sun.security.action.*;
 import sun.net.InetAddressCachePolicy;
+import sun.net.spi.nameservice.NameService;
+import sun.net.spi.nameservice.NameServiceDescriptor;
 import sun.net.util.IPAddressUtil;
-import sun.net.spi.nameservice.*;
+import sun.security.action.GetBooleanAction;
+import sun.security.action.GetPropertyAction;
+
+import java.io.*;
+import java.io.ObjectInputStream.GetField;
+import java.io.ObjectOutputStream.PutField;
+import java.security.AccessController;
+import java.util.*;
 
 /**
  * This class represents an Internet Protocol (IP) address.
@@ -184,6 +176,27 @@ import sun.net.spi.nameservice.*;
  * @see     java.net.InetAddress#getByName(java.lang.String)
  * @see     java.net.InetAddress#getLocalHost()
  * @since JDK1.0
+ *
+ *   IP地址
+ *
+ *   单播：自己和另外一个通讯
+ *   多播：自己和其他多个人通讯
+ *   广播，自己和其他所有通讯
+ *   环回地址：发送的任何内容都循环，并成为本地主机的ip输入
+ *
+ *   ip地址缓存
+ *   当安装security manager时，被正常解析的ip地址被永久缓存，没有安装，则缓存过期会被自动删掉
+ *
+ *   networkaddress.cache.ttl表示缓存的时间（秒），-1表示永久缓存
+ *   networkaddress.cache.negative.ttl 表示ip地址解析错误的缓存时间（秒），-1表示永久缓存
+ *
+ *   链路本地地址被设计为用于单个链路上的寻址，例如自动地址配置，邻居发现或当没有路由器存在时。
+
+站点本地地址被设计为用于在站点内寻址，而不需要全局前缀。
+
+全球地址在互联网上是独一无二的。
+
+http://rainbow702.iteye.com/blog/2066431
  */
 public
 class InetAddress implements java.io.Serializable {
@@ -327,6 +340,8 @@ class InetAddress implements java.io.Serializable {
      * @return a {@code boolean} indicating if the InetAddress is
      * an IP multicast address
      * @since   JDK1.1
+     *
+     *   是否为多播
      */
     public boolean isMulticastAddress() {
         return false;
@@ -337,6 +352,10 @@ class InetAddress implements java.io.Serializable {
      * @return a {@code boolean} indicating if the Inetaddress is
      *         a wildcard address.
      * @since 1.4
+     *
+     *  是否为通配符地址
+     *
+     *  通配符地址ip1，ip2，装换成二进制，安位匹配，0表示完全匹配，1表示随机匹配
      */
     public boolean isAnyLocalAddress() {
         return false;
@@ -348,6 +367,8 @@ class InetAddress implements java.io.Serializable {
      * @return a {@code boolean} indicating if the InetAddress is
      * a loopback address; or false otherwise.
      * @since 1.4
+     *
+     *   是否为环回地址
      */
     public boolean isLoopbackAddress() {
         return false;
@@ -359,6 +380,8 @@ class InetAddress implements java.io.Serializable {
      * @return a {@code boolean} indicating if the InetAddress is
      * a link local address; or false if address is not a link local unicast address.
      * @since 1.4
+     *
+     *   是否为本地地址
      */
     public boolean isLinkLocalAddress() {
         return false;
@@ -370,6 +393,9 @@ class InetAddress implements java.io.Serializable {
      * @return a {@code boolean} indicating if the InetAddress is
      * a site local address; or false if address is not a site local unicast address.
      * @since 1.4
+     *
+     *  是否为站点本地地址
+     *  如果本地单播地址返回false
      */
     public boolean isSiteLocalAddress() {
         return false;
@@ -382,6 +408,8 @@ class InetAddress implements java.io.Serializable {
      *         is a multicast address of global scope, false if it is not
      *         of global scope or it is not a multicast address
      * @since 1.4
+     *
+     *    检查 1 多播地址  2 是否为全球范围
      */
     public boolean isMCGlobal() {
         return false;
@@ -394,6 +422,8 @@ class InetAddress implements java.io.Serializable {
      *         is a multicast address of node-local scope, false if it is not
      *         of node-local scope or it is not a multicast address
      * @since 1.4
+     *
+     *     检查 1 多播地址 2 是否为节点范围
      */
     public boolean isMCNodeLocal() {
         return false;
@@ -406,6 +436,8 @@ class InetAddress implements java.io.Serializable {
      *         is a multicast address of link-local scope, false if it is not
      *         of link-local scope or it is not a multicast address
      * @since 1.4
+     *
+     *    检查 1 多播地址 2 是否为链路范围
      */
     public boolean isMCLinkLocal() {
         return false;
@@ -431,6 +463,8 @@ class InetAddress implements java.io.Serializable {
      *         false if it is not of organization-local scope
      *         or it is not a multicast address
      * @since 1.4
+     *
+     *   同上，组织范围
      */
     public boolean isMCOrgLocal() {
         return false;
@@ -456,6 +490,10 @@ class InetAddress implements java.io.Serializable {
      * @throws IOException if a network error occurs
      * @throws  IllegalArgumentException if {@code timeout} is negative.
      * @since 1.5
+     *
+     *    尝试是否在制定的时间（毫秒）内连接目的主机
+     *    否则表示达不到，抛出IllegalArgumentException
+     *
      */
     public boolean isReachable(int timeout) throws IOException {
         return isReachable(null, 0 , timeout);
@@ -491,6 +529,8 @@ class InetAddress implements java.io.Serializable {
      * @return a {@code boolean}indicating if the address is reachable.
      * @throws IOException if a network error occurs
      * @since 1.5
+     *
+     *    网络接口，数据包的最大条数（经过多少个路由），超时时间
      */
     public boolean isReachable(NetworkInterface netif, int ttl,
                                int timeout) throws IOException {
@@ -526,6 +566,8 @@ class InetAddress implements java.io.Serializable {
      *
      * @see InetAddress#getCanonicalHostName
      * @see SecurityManager#checkConnect
+     *
+     *
      */
     public String getHostName() {
         return getHostName(true);
@@ -581,6 +623,8 @@ class InetAddress implements java.io.Serializable {
      * @see SecurityManager#checkConnect
      *
      * @since 1.4
+     *
+     *   获取此IP地址的完全限定域名
      */
     public String getCanonicalHostName() {
         if (canonicalHostName == null) {

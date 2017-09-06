@@ -40,6 +40,8 @@ import java.io.FileDescriptor;
  *
  * @author  unascribed
  * @since   JDK1.0
+ *
+ *   所有socket的公共父类
  */
 public abstract class SocketImpl implements SocketOptions {
     /**
@@ -62,6 +64,8 @@ public abstract class SocketImpl implements SocketOptions {
 
     /**
      * The port number on the remote host to which this socket is connected.
+     *
+     *   远端port
      */
     protected int port;
 
@@ -78,8 +82,8 @@ public abstract class SocketImpl implements SocketOptions {
      * @exception  IOException  if an I/O error occurs while creating the
      *               socket.
      *
-     *               true:stream socket
-     *               false：datagram socket
+     *               true:stream socket ，tcp
+     *               false：datagram socket ，udp
      */
     protected abstract void create(boolean stream) throws IOException;
 

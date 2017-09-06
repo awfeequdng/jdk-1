@@ -698,7 +698,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     final void tryTerminate() {
         for (;;) {
             int c = ctl.get();
-            if (isRunning(c) ||
+            if (isRunning(c) ||/**处于run，TIDYING，TERMINATED或者处于SHUTDOWN且队列不为空*/
                 runStateAtLeast(c, TIDYING) ||
                 (runStateOf(c) == SHUTDOWN && ! workQueue.isEmpty()))
                 return;
@@ -907,7 +907,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             int rs = runStateOf(c);
 
             // Check if queue empty only if necessary.
-            if (rs >= SHUTDOWN &&
+            if (rs >= SHUTDOWN &&/**判断等待的队列是否为空*/
                 ! (rs == SHUTDOWN &&
                    firstTask == null &&
                    ! workQueue.isEmpty()))
@@ -916,12 +916,12 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             for (;;) {
                 int wc = workerCountOf(c);
                 if (wc >= CAPACITY ||
-                    wc >= (core ? corePoolSize : maximumPoolSize))
+                    wc >= (core ? corePoolSize : maximumPoolSize))/**超出了限制数量*/
                     return false;
-                if (compareAndIncrementWorkerCount(c))
+                if (compareAndIncrementWorkerCount(c))/**修改正在运行的线程数量*/
                     break retry;
                 c = ctl.get();  // Re-read ctl
-                if (runStateOf(c) != rs)
+                if (runStateOf(c) != rs)/**状态变了，重试*/
                     continue retry;
                 // else CAS failed due to workerCount change; retry inner loop
             }
@@ -943,8 +943,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                     int rs = runStateOf(ctl.get());
 
                     if (rs < SHUTDOWN ||
-                        (rs == SHUTDOWN && firstTask == null)) {
-                        if (t.isAlive()) // precheck that t is startable
+                        (rs == SHUTDOWN && firstTask == null)) {/**正常状态，或者SHUTDOWN，且执行的任务为空*/
+                        if (t.isAlive()) /**前几步表示线程新创建的，还未运行*/// precheck that t is startable
                             throw new IllegalThreadStateException();
                         workers.add(w);
                         int s = workers.size();
@@ -999,6 +999,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *
      * @param w the worker
      * @param completedAbruptly if the worker died due to user exception
+     *
+     *
      */
     private void processWorkerExit(Worker w, boolean completedAbruptly) {
         if (completedAbruptly) // If abrupt, then workerCount wasn't adjusted
@@ -1053,8 +1055,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             int rs = runStateOf(c);
 
             // Check if queue empty only if necessary.
-            if (rs >= SHUTDOWN && (rs >= STOP || workQueue.isEmpty())) {
-                decrementWorkerCount();
+            if (rs >= SHUTDOWN && (rs >= STOP || workQueue.isEmpty())) {/**停止了*/
+                decrementWorkerCount();/**减少worker数量*/
                 return null;
             }
 
@@ -1142,7 +1144,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                 if ((runStateAtLeast(ctl.get(), STOP) ||
                      (Thread.interrupted() &&
                       runStateAtLeast(ctl.get(), STOP))) &&
-                    !wt.isInterrupted())
+                    !wt.isInterrupted())/**如果线程池stop，中断线程*/
                     wt.interrupt();
                 try {
                     beforeExecute(wt, task);
@@ -1166,7 +1168,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             }
             completedAbruptly = false;
         } finally {
-            processWorkerExit(w, completedAbruptly);
+            processWorkerExit(w, completedAbruptly);/**移除workers*/
         }
     }
 
@@ -1362,19 +1364,19 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * and so reject the task.
          */
         int c = ctl.get();
-        if (workerCountOf(c) < corePoolSize) {
+        if (workerCountOf(c) < corePoolSize) {/**小于corePoolSize，开启新的线程*/
             if (addWorker(command, true))
                 return;
             c = ctl.get();
         }
-        if (isRunning(c) && workQueue.offer(command)) {
+        if (isRunning(c) && workQueue.offer(command)) {/**插入到队列中*/
             int recheck = ctl.get();
             if (! isRunning(recheck) && remove(command))
                 reject(command);
-            else if (workerCountOf(recheck) == 0)
+            else if (workerCountOf(recheck) == 0)/**如果没有正在工作的线程*/
                 addWorker(null, false);
         }
-        else if (!addWorker(command, false))
+        else/**插入失败，及队列已满*/ if (!addWorker(command, false))
             reject(command);
     }
 

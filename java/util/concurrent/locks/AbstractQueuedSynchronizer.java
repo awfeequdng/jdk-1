@@ -1663,6 +1663,8 @@ public abstract class AbstractQueuedSynchronizer
      * a condition queue, is now waiting to reacquire on sync queue.
      * @param node the node
      * @return true if is reacquiring
+     *
+     *   是否在队列中
      */
     final boolean isOnSyncQueue(Node node) {
         if (node.waitStatus == Node.CONDITION || node.prev == null)
@@ -1677,13 +1679,15 @@ public abstract class AbstractQueuedSynchronizer
          * unless the CAS failed (which is unlikely), it will be
          * there, so we hardly ever traverse much.
          */
-        return findNodeFromTail(node);
+        return findNodeFromTail(node);/**是否在队列中*/
     }
 
     /**
      * Returns true if node is on sync queue by searching backwards from tail.
      * Called only when needed by isOnSyncQueue.
      * @return true if present
+     *
+     *   是否在队列中
      */
     private boolean findNodeFromTail(Node node) {
         Node t = tail;
@@ -1707,7 +1711,7 @@ public abstract class AbstractQueuedSynchronizer
         /*
          * If cannot change waitStatus, the node has been cancelled.
          */
-        if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
+        if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))/**更该节点状态*/
             return false;
 
         /*
@@ -1716,9 +1720,9 @@ public abstract class AbstractQueuedSynchronizer
          * attempt to set waitStatus fails, wake up to resync (in which
          * case the waitStatus can be transiently and harmlessly wrong).
          */
-        Node p = enq(node);
+        Node p = enq(node);/**加入队列*/
         int ws = p.waitStatus;
-        if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))
+        if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))/**被取消了，或者有其他线程修改了状态，及修改成SIGNAL*/
             LockSupport.unpark(node.thread);
         return true;
     }
@@ -1756,14 +1760,14 @@ public abstract class AbstractQueuedSynchronizer
         boolean failed = true;
         try {
             int savedState = getState();
-            if (release(savedState)) {
+            if (release(savedState)) {/**释放锁*/
                 failed = false;
                 return savedState;
             } else {
                 throw new IllegalMonitorStateException();
             }
         } finally {
-            if (failed)
+            if (failed)/**失败则取消*/
                 node.waitStatus = Node.CANCELLED;
         }
     }
@@ -1880,12 +1884,14 @@ public abstract class AbstractQueuedSynchronizer
         /**
          * Adds a new waiter to wait queue.
          * @return its new wait node
+         *
+         *   添加一个节点到condition队尾，必要时清空队列中的已经被取消的节点
          */
         private Node addConditionWaiter() {
             Node t = lastWaiter;
             // If lastWaiter is cancelled, clean out.
-            if (t != null && t.waitStatus != Node.CONDITION) {
-                unlinkCancelledWaiters();
+            if (t != null && t.waitStatus != Node.CONDITION) {/**如果最后一个节点被取消了*/
+                unlinkCancelledWaiters();/**去除取消的节点*/
                 t = lastWaiter;
             }
             Node node = new Node(Thread.currentThread(), Node.CONDITION);
@@ -1939,6 +1945,8 @@ public abstract class AbstractQueuedSynchronizer
          * particular target to unlink all pointers to garbage nodes
          * without requiring many re-traversals during cancellation
          * storms.
+         *
+         *  去除condition取消的节点
          */
         private void unlinkCancelledWaiters() {
             Node t = firstWaiter;
@@ -1971,7 +1979,7 @@ public abstract class AbstractQueuedSynchronizer
          *         returns {@code false}
          */
         public final void signal() {
-            if (!isHeldExclusively())
+            if (!isHeldExclusively())/**是否占有锁*/
                 throw new IllegalMonitorStateException();
             Node first = firstWaiter;
             if (first != null)
@@ -2068,12 +2076,12 @@ public abstract class AbstractQueuedSynchronizer
         public final void await() throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
-            Node node = addConditionWaiter();
-            int savedState = fullyRelease(node);
+            Node node = addConditionWaiter();/**添加到等待队列中*/
+            int savedState = fullyRelease(node);/**释放锁*/
             int interruptMode = 0;
-            while (!isOnSyncQueue(node)) {
+            while (!isOnSyncQueue(node)) {/**是否在队列中*/
                 LockSupport.park(this);
-                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+                if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)/**线程没有被打断*/
                     break;
             }
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)

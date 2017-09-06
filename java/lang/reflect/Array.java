@@ -34,9 +34,11 @@ package java.lang.reflect;
  * conversion would occur.
  *
  * @author Nakul Saraiya
+ *
+ *   setxxx或getxxx如果会自动进行装箱，拆箱，如果
  */
 public final
-class Array {
+    class Array {
 
     /**
      * Constructor.  Class Array is not instantiable.
@@ -69,6 +71,8 @@ class Array {
      * instance exceed 255.
      * @exception NegativeArraySizeException if the specified {@code length}
      * is negative
+     *
+     *   如果componentType是void类型,数组维度不能超过255
      */
     public static Object newInstance(Class<?> componentType, int length)
         throws NegativeArraySizeException {
@@ -105,6 +109,8 @@ class Array {
      * instance exceed 255.
      * @exception NegativeArraySizeException if any of the components in
      * the specified {@code dimensions} argument is negative.
+     *
+     *    dimensions表示数组的维度，1，2，3即[1][2][3]
      */
     public static Object newInstance(Class<?> componentType, int... dimensions)
         throws IllegalArgumentException, NegativeArraySizeException {
@@ -118,6 +124,7 @@ class Array {
      * @return the length of the array
      * @exception IllegalArgumentException if the object argument is not
      * an array
+     *
      */
     public static native int getLength(Object array)
         throws IllegalArgumentException;
@@ -137,6 +144,8 @@ class Array {
      * @exception ArrayIndexOutOfBoundsException If the specified {@code index}
      * argument is negative, or if it is greater than or equal to the
      * length of the specified array
+     *
+     *   如果是原始类型则包装成包装类型
      */
     public static native Object get(Object array, int index)
         throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
@@ -156,6 +165,8 @@ class Array {
      * argument is negative, or if it is greater than or equal to the
      * length of the specified array
      * @see Array#get
+     *
+     *   getxxx如果类型不能转换，则会抛出IllegalArgumentException
      */
     public static native boolean getBoolean(Object array, int index)
         throws IllegalArgumentException, ArrayIndexOutOfBoundsException;

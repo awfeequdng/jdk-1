@@ -479,6 +479,8 @@ public final class Method extends Executable {
      *              and the method is an instance method.
      * @exception ExceptionInInitializerError if the initialization
      * provoked by this method fails.
+     *
+     *   如果是静态方法，则忽略obj
      */
     @CallerSensitive
     public Object invoke(Object obj, Object... args)
@@ -505,6 +507,8 @@ public final class Method extends Executable {
      * @return true if and only if this method is a bridge
      * method as defined by the Java Language Specification.
      * @since 1.5
+     *
+     *   桥接方法，http://berdy.iteye.com/blog/810488
      */
     public boolean isBridge() {
         return (getModifiers() & Modifier.BRIDGE) != 0;

@@ -317,6 +317,7 @@ public final class Class<T> implements java.io.Serializable,
      * @since     1.2
      *
      *      该方法不能用于获取表示原始类型或void的任何Class对象。
+     *      如果classloader为null则使用bootstrap class loader
      */
     @CallerSensitive
     public static Class<?> forName(String name, boolean initialize,
@@ -713,7 +714,7 @@ public final class Class<T> implements java.io.Serializable,
      *     <cite>The Java&trade; Virtual Machine Specification</cite>
      * @since 1.5
      *
-     *       返回泛型数组
+     *       返回泛型数组  hashset<string> 返回他所代表的TypeVariable
      */
     @SuppressWarnings("unchecked")
     public TypeVariable<Class<T>>[] getTypeParameters() {
@@ -855,8 +856,8 @@ public final class Class<T> implements java.io.Serializable,
      *
      * @return an array of interfaces implemented by this class.
      *
-     *    如果是接口，就返回他的所有父类
-     *    如果是类的话，就返回他的所有实现的接口
+     *    如果是接口，就返回他的所有父类(一层)
+     *    如果是类的话，就返回他的所有实现的接口（一层）
      *    顺序按声明排列
      *
      */
@@ -989,6 +990,8 @@ public final class Class<T> implements java.io.Serializable,
      *          particular, this method returns null if this object represents
      *          a primitive type or void.
      * @since   JDK1.1
+     *
+     *  如果为primitive type or void则返回null，否则返回他的签名者
      */
     public native Object[] getSigners();
 
@@ -1459,7 +1462,7 @@ public final class Class<T> implements java.io.Serializable,
      * @return {@code true} if and only if this class is a local class.
      * @since 1.5
      *
-     *    局部类
+     *    局部类,方法内部定义
      */
     public boolean isLocalClass() {
         return isLocalOrAnonymousClass() && !isAnonymousClass();
@@ -3424,6 +3427,8 @@ public final class Class<T> implements java.io.Serializable,
      * null and is not assignable to the type T.
      *
      * @since 1.5
+     *
+     *    将obj强转为T
      */
     @SuppressWarnings("unchecked")
     public T cast(Object obj) {

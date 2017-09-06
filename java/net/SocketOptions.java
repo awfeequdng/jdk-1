@@ -145,7 +145,7 @@ public interface SocketOptions {
      * @see Socket#setTcpNoDelay
      * @see Socket#getTcpNoDelay
      *
-     * 禁用Nagle的这个连接的算法。
+     * 禁用Nagle的这个连接的算法。该算法是将数据进行缓冲，然后统一发出去
      * 到网络的书面数据不会缓冲以前写入的数据的确认。
      */
 

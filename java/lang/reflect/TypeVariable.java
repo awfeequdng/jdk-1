@@ -47,6 +47,8 @@ package java.lang.reflect;
  * underlying type variable.
  *
  * @since 1.5
+ *
+ *   类型变量，泛型，例如arraylist<E> 中的E
  */
 public interface TypeVariable<D extends GenericDeclaration> extends Type, AnnotatedElement {
     /**
@@ -69,8 +71,11 @@ public interface TypeVariable<D extends GenericDeclaration> extends Type, Annota
      *     bound(s) of this type variable
      *
      *     返回上限的类型数组，如果为 parameterized type 或 type variable 则他被创建，否则就剩class类型了
+     *     没有显示声明上限，则为object
+     *
      *
     */
+            //todo
     Type[] getBounds();
 
     /**
@@ -82,6 +87,7 @@ public interface TypeVariable<D extends GenericDeclaration> extends Type, Annota
      * @since 1.5
      *
      *    获取定义这个类型变量的  类型
+     *    arrasylist<E> 返回arraylist
      */
     D getGenericDeclaration();
 
@@ -104,6 +110,9 @@ public interface TypeVariable<D extends GenericDeclaration> extends Type, Annota
      *
      * @return an array of objects representing the upper bounds of the type variable
      * @since 1.8
+     *
+     *
      */
+    //todo
      AnnotatedType[] getAnnotatedBounds();
 }

@@ -42,12 +42,15 @@ interface Member {
     /**
      * Identifies the set of all public members of a class or interface,
      * including inherited members.
+     *   类或者接口所有的public成员，包括继承的
      */
     public static final int PUBLIC = 0;
 
     /**
      * Identifies the set of declared members of a class or interface.
      * Inherited members are not included.
+     *
+     *  类或者接口声明所有成员，和上面区别，上面必须为public，下面任意，下面不包括继承的
      */
     public static final int DECLARED = 1;
 
@@ -56,7 +59,9 @@ interface Member {
      * that declares the member or constructor represented by this Member.
      *
      * @return an object representing the declaring class of the
-     * underlying member
+     * underlying member\
+     *
+     *  返回该成员所在的class
      */
     public Class<?> getDeclaringClass();
 
@@ -76,6 +81,8 @@ interface Member {
      *
      * @return the Java language modifiers for the underlying member
      * @see Modifier
+     *
+     *    返回修饰符
      */
     public int getModifiers();
 
@@ -87,6 +94,8 @@ interface Member {
      * the compiler.
      * @jls 13.1 The Form of a Binary
      * @since 1.5
+     *
+     *   如果类成员由编译器引入，返回type
      */
     public boolean isSynthetic();
 }

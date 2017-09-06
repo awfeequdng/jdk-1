@@ -101,6 +101,8 @@ import java.util.concurrent.locks.LockSupport;
  * @since 1.5
  * @author Doug Lea and Bill Scherer and Michael Scott
  * @param <V> The type of objects that may be exchanged
+ *
+ *           http://blog.csdn.net/chunlongyu/article/details/52504895
  */
 public class Exchanger<V> {
 
@@ -458,7 +460,7 @@ public class Exchanger<V> {
             return null;
 
         for (Node q;;) {
-            if ((q = slot) != null) {
+            if ((q = slot) != null) {/**直接匹配*/
                 if (U.compareAndSwapObject(this, SLOT, q, null)) {
                     Object v = q.item;
                     q.match = item;
@@ -468,7 +470,7 @@ public class Exchanger<V> {
                     return v;
                 }
                 // create arena on contention, but continue until slot null
-                if (NCPU > 1 && bound == 0 &&
+                if (NCPU > 1 && bound == 0 &&/**没看懂，貌似是增大插槽的数量*/
                     U.compareAndSwapInt(this, BOUND, 0, SEQ))
                     arena = new Node[(FULL + 2) << ASHIFT];
             }
@@ -476,7 +478,7 @@ public class Exchanger<V> {
                 return null; // caller must reroute to arenaExchange
             else {
                 p.item = item;
-                if (U.compareAndSwapObject(this, SLOT, null, p))
+                if (U.compareAndSwapObject(this, SLOT, null, p))/**占用一个插槽*/
                     break;
                 p.item = null;
             }
@@ -495,7 +497,7 @@ public class Exchanger<V> {
                 else if (h < 0 && (--spins & ((SPINS >>> 1) - 1)) == 0)
                     Thread.yield();
             }
-            else if (slot != p)
+            else if (slot != p)/**其他线程修改了slot*/
                 spins = SPINS;
             else if (!t.isInterrupted() && arena == null &&
                      (!timed || (ns = end - System.nanoTime()) > 0L)) {

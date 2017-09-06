@@ -80,6 +80,8 @@ import java.util.Spliterators;
  * @since 1.5
  * @author Doug Lea and Bill Scherer and Michael Scott
  * @param <E> the type of elements held in this collection
+ *
+ *           阻塞队列，每一个插入操作必须等待另一个删除操作，简而言之，就是双方握手后一起离开
  */
 public class SynchronousQueue<E> extends AbstractQueue<E>
     implements BlockingQueue<E>, java.io.Serializable {
@@ -680,22 +682,22 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
             for (;;) {
                 QNode t = tail;
                 QNode h = head;
-                if (t == null || h == null)         // saw uninitialized value
+                if (t == null || h == null) /**没有初始化*/        // saw uninitialized value
                     continue;                       // spin
 
-                if (h == t || t.isData == isData) { // empty or same-mode
+                if (h == t || t.isData == isData) /**空队列，或者是同一种模式*/{ // empty or same-mode
                     QNode tn = t.next;
-                    if (t != tail)                  // inconsistent read
+                    if (t != tail)   /**出现不一致情况*/               // inconsistent read
                         continue;
-                    if (tn != null) {               // lagging tail
+                    if (tn != null) {    /**同样不一致，设置新的tail*/           // lagging tail
                         advanceTail(t, tn);
                         continue;
                     }
-                    if (timed && nanos <= 0)        // can't wait
+                    if (timed && nanos <= 0) /**超时*/       // can't wait
                         return null;
-                    if (s == null)
+                    if (s == null)/**创建新的节点*/
                         s = new QNode(e, isData);
-                    if (!t.casNext(null, s))        // failed to link in
+                    if (!t.casNext(null, s))/**加入队列*/        // failed to link in
                         continue;
 
                     advanceTail(t, s);              // swing tail and wait
@@ -713,9 +715,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     }
                     return (x != null) ? (E)x : e;
 
-                } else {                            // complementary-mode
+                } else {    /**不一样的模式*/                        // complementary-mode
                     QNode m = h.next;               // node to fulfill
-                    if (t != tail || m == null || h != head)
+                    if (t != tail || m == null || h != head)/**不一致*/
                         continue;                   // inconsistent read
 
                     Object x = m.item;
@@ -750,9 +752,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                          (timed ? maxTimedSpins : maxUntimedSpins) : 0);
             for (;;) {
                 if (w.isInterrupted())
-                    s.tryCancel(e);
+                    s.tryCancel(e);/**取消当前节点。设置item=自己*/
                 Object x = s.item;
-                if (x != e)
+                if (x != e)/**取消的节点，或者已经匹配完了*/
                     return x;
                 if (timed) {
                     nanos = deadline - System.nanoTime();
@@ -765,7 +767,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                     --spins;
                 else if (s.waiter == null)
                     s.waiter = w;
-                else if (!timed)
+                else if (!timed)/**阻塞*/
                     LockSupport.park(this);
                 else if (nanos > spinForTimeoutThreshold)
                     LockSupport.parkNanos(this, nanos);

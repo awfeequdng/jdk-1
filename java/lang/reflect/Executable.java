@@ -25,20 +25,22 @@
 
 package java.lang.reflect;
 
-import java.lang.annotation.*;
-import java.util.Map;
-import java.util.Objects;
 import sun.reflect.annotation.AnnotationParser;
 import sun.reflect.annotation.AnnotationSupport;
-import sun.reflect.annotation.TypeAnnotationParser;
 import sun.reflect.annotation.TypeAnnotation;
+import sun.reflect.annotation.TypeAnnotationParser;
 import sun.reflect.generics.repository.ConstructorRepository;
+
+import java.lang.annotation.Annotation;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * A shared superclass for the common functionality of {@link Method}
  * and {@link Constructor}.
  *
  * @since 1.8
+ *   Method和Construct共享的超类
  */
 public abstract class Executable extends AccessibleObject
     implements Member, GenericDeclaration {
